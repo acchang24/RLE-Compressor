@@ -5,7 +5,6 @@
 #include "RleData.h"
 #include "RleFile.h"
 
-
 // Checks to see if two memory buffers hold the same data after compression or decompression
 // @param - const std::vector<int8_t>& for the data results after compression or decompression
 // @param - const std::vector<int8_t>& for the expected output of memory
@@ -42,6 +41,17 @@ static bool RunCompressionTest(const std::vector<int8_t>& input, const std::vect
 	return SameBuffers(data.mData, expected);
 }
 
+// Runs a test whenever data gets decompressed
+// @param - const std::vector<int8_t>& for the input data
+// @param - const std::vector<int8_t>& for the expected data
+static bool RunDecompressionTest(const std::vector<int8_t>& input, const std::vector<int8_t>& expected)
+{
+	RleData data;
+	data.Decompress(input, expected.size());
+	return SameBuffers(data.mData, expected);
+}
+
+// TEST USING CATCH
 TEST_CASE("RLE Compression", "[compression]")
 {
 	SECTION("Basic positive run")
@@ -213,6 +223,101 @@ TEST_CASE("RLE Compression", "[compression]")
 		};
 
 		bool result = RunCompressionTest(test, expected);
+		REQUIRE(result);
+	}
+}
+
+TEST_CASE("RLE Decompression", "[decompression]")
+{
+	SECTION("Basic positive run")
+	{
+		std::vector<int8_t> test = { 40,'x' };
+		std::vector<int8_t> expected = {
+			'x','x','x','x','x','x','x','x','x','x',
+			'x','x','x','x','x','x','x','x','x','x',
+			'x','x','x','x','x','x','x','x','x','x',
+			'x','x','x','x','x','x','x','x','x','x',
+		};
+
+		bool result = RunDecompressionTest(test, expected);
+		REQUIRE(result);
+	}
+
+	SECTION("Basic negative run")
+	{
+		std::vector<int8_t> test = {
+			3,'a',-3,'b','c',42,7,'a',
+			-3,'b','c',42,4,'a',
+		};
+
+		std::vector<int8_t> expected = {
+			'a','a','a','b','c',42,
+			'a','a','a','a','a','a',
+			'a','b','c',42,'a','a','a','a',
+		};
+
+		bool result = RunDecompressionTest(test, expected);
+		REQUIRE(result);
+	}
+
+	SECTION("Long positive over 127")
+	{
+		std::vector<int8_t> expected = {
+			'c','c','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a',
+			'a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a',
+			'a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a',
+			'a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a',
+			'a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a',
+			'a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a',
+			'a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a',
+			'a','a','a','a','a','b','c',42,
+		};
+		std::vector<int8_t> test = {
+			2,'c',127,'a',2,'a',-3,'b','c',42
+		};
+
+		bool result = RunDecompressionTest(test, expected);
+		REQUIRE(result);
+	}
+
+	SECTION("Long negative run")
+	{
+		std::vector<int8_t> expected = {
+			'b','a','b','a','b','a','b','a','b','a','b','a','b','a','b','a','b','a',
+			'b','a','b','a','b','a','b','a','b','a','b','a','b','a','b','a','b','a',
+			'b','a','b','a','b','a','b','a','b','a','b','a','b','a','b','a','b','a',
+			'b','a','b','a','b','a','b','a','b','a','b','a','b','a','b','a','b','a',
+			'b','a','b','a','b','a','b','a','b','a','b','a','b','a','b','a','b','a',
+			'b','a','b','a','b','a','b','a','b','a','b','a','b','a','b','a','b','a',
+			'b','a','b','a','b','a','b','a','b','a','b','a','b','a','b','a','b','a',
+			'b',
+
+			'a','b','a','b','a','b','a','b','a','b','a','b','a','b','a','b','a',
+			'b','a','b','a','b','a','b','a','b','a','b','a','b','a','b','a','b','a',
+			'b','a','b','a','b','a','b','a','b','a','b','a','b','a','b','a','b','a',
+			'b','a','b','a','b','a','b','a','b','a','b','a','b','a','b','a','b','a',
+			'b','a','b','a','b','a','b','a','b','a','b','a','b','a','b','a','b','a',
+			'b','a','b','a','b','a','b','a','b','a','b','a','b','a','b','a','b','a',
+		};
+		std::vector<int8_t> test = {
+			-127,'b','a','b','a','b','a','b','a','b','a','b','a','b','a','b','a','b','a',
+			'b','a','b','a','b','a','b','a','b','a','b','a','b','a','b','a','b','a',
+			'b','a','b','a','b','a','b','a','b','a','b','a','b','a','b','a','b','a',
+			'b','a','b','a','b','a','b','a','b','a','b','a','b','a','b','a','b','a',
+			'b','a','b','a','b','a','b','a','b','a','b','a','b','a','b','a','b','a',
+			'b','a','b','a','b','a','b','a','b','a','b','a','b','a','b','a','b','a',
+			'b','a','b','a','b','a','b','a','b','a','b','a','b','a','b','a','b','a',
+			'b',
+			-107,'a','b','a','b','a','b','a','b','a','b','a','b','a','b','a','b','a',
+			'b','a','b','a','b','a','b','a','b','a','b','a','b','a','b','a','b','a',
+			'b','a','b','a','b','a','b','a','b','a','b','a','b','a','b','a','b','a',
+			'b','a','b','a','b','a','b','a','b','a','b','a','b','a','b','a','b','a',
+			'b','a','b','a','b','a','b','a','b','a','b','a','b','a','b','a','b','a',
+			'b','a','b','a','b','a','b','a','b','a','b','a','b','a','b','a','b','a',
+
+		};
+
+		bool result = RunDecompressionTest(test, expected);
 		REQUIRE(result);
 	}
 }
