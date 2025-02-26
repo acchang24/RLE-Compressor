@@ -1,6 +1,7 @@
 #define CATCH_CONFIG_MAIN
 #include <iostream>
 #include <vector>
+#include "md5.h"
 #include "catch.hpp"
 #include "RleData.h"
 #include "RleFile.h"
@@ -29,6 +30,16 @@ static bool SameBuffers(const std::vector<int8_t>& results, const std::vector<in
 	}
 
 	return true;
+}
+
+// Uses MD5 to check if a compressed/decompressed file's hash matches a prehashed expected result
+// @param - const std::string& for the file name to test
+// @param - const std::string& for the expected string hash
+static bool CheckFileMD5(const std::string& fileName, const std::string& expected)
+{
+	MD5 md5;
+	std::string hash = md5.digestFile(fileName.c_str());
+	return hash == expected;
 }
 
 // Runs a test whenever data gets compressed
@@ -318,6 +329,29 @@ TEST_CASE("RLE Decompression", "[decompression]")
 		};
 
 		bool result = RunDecompressionTest(test, expected);
+		REQUIRE(result);
+	}
+}
+
+TEST_CASE("File compression", "[file_compression]")
+{
+	RleFile r;
+	SECTION("rle.bmp")
+	{
+		r.CreateArchive("Data/rle.bmp");
+		bool result = CheckFileMD5("Data/rle.bmp.rle", "f2a9d8425d53c664e45d9eb1b53137b9");
+		REQUIRE(result);
+	}
+	SECTION("pic.jpg")
+	{
+		r.CreateArchive("Data/pic.jpg");
+		bool result = CheckFileMD5("Data/pic.jpg.rle", "0bbf2a5109b30d79939d2061ea8c74aa");
+		REQUIRE(result);
+	}
+	SECTION("Conquest.ogg")
+	{
+		r.CreateArchive("Data/Conquest.ogg");
+		bool result = CheckFileMD5("Data/Conquest.ogg.rle", "ec29ff368ec5100bfba22635ddc5ba5c");
 		REQUIRE(result);
 	}
 }

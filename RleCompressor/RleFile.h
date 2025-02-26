@@ -5,9 +5,13 @@
 class RleFile
 {
 public:
+	// Struct for file header
 	struct Header
 	{
-		
+		char mSig[4] = { 'R', 'L', 'E', '\x01' };
+		int mFileSize = 0;
+		unsigned char mFileNameLength = 0;
+		std::string mFileName;
 	};
 
 	// Creates a file archive by taking in a file and compressesing it,

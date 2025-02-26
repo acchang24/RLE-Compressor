@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Add .cpp files here
 set(SOURCE_FILES Tests.cpp)
 # Add .h files here
-set(HEADER_FILES catch.hpp)
+set(HEADER_FILES md5.h catch.hpp)
 
 # Include RleCompressor headers
 include_directories(../RleCompressor)
