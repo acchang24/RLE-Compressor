@@ -25,8 +25,8 @@ static bool SameBuffers(const std::vector<int8_t>& results, const std::vector<in
 		if (results[i] != expected[i])
 		{
 			FAIL("Results at index: " << i << " is " << static_cast<int>(results[i]) << " but expected " << static_cast<int>(expected[i]));
+			return false;
 		}
-		return false;
 	}
 
 	return true;
@@ -44,6 +44,49 @@ static bool RunCompressionTest(const std::vector<int8_t>& input, const std::vect
 
 TEST_CASE("RLE Compression", "[compression]")
 {
+	SECTION("Basic positive run")
+	{
+		std::vector<int8_t> test = {
+			'a','a','a','b','b','b','c','c','c',42,42,42,
+			'a','a','a','b','b','b','c','c','c',42,42,42,
+			'a','a','a','b','b','b','c','c','c',42,42,42,
+			'a','a','a','b','b','b','c','c','c',42,42,42,
+			'a','a','a','b','b','b','c','c','c',42,42,42,
+			'a','a','a','b','b','b','c','c','c',42,42,42,
+			'a','a','a','b','b','b','c','c','c',42,42,42,
+			'a','a','a','b','b','b','c','c','c',42,42,42,
+		};
+		std::vector<int8_t> expected = {
+			3,'a',3,'b',3,'c',3,42,
+			3,'a',3,'b',3,'c',3,42,
+			3,'a',3,'b',3,'c',3,42,
+			3,'a',3,'b',3,'c',3,42,
+			3,'a',3,'b',3,'c',3,42,
+			3,'a',3,'b',3,'c',3,42,
+			3,'a',3,'b',3,'c',3,42,
+			3,'a',3,'b',3,'c',3,42,
+		};
+
+		bool result = RunCompressionTest(test, expected);
+		REQUIRE(result);
+	}
+
+	SECTION("Basic negative run")
+	{
+		std::vector<int8_t> test = {
+			'a','a','a','b','c',42,
+			'a','a','a','a','a','a',
+			'a','b','c',42,'a','a','a','a',
+		};
+		std::vector<int8_t> expected = {
+			3,'a',-3,'b','c',42,7,'a',
+			-3,'b','c',42,4,'a',
+		};
+
+		bool result = RunCompressionTest(test, expected);
+		REQUIRE(result);
+	}
+
 	SECTION("+/- mix")
 	{
 		std::vector<int8_t> test = { 'a','b','a','a','b' };
@@ -51,6 +94,125 @@ TEST_CASE("RLE Compression", "[compression]")
 
 		bool result = RunCompressionTest(test, expected);
 
+		REQUIRE(result);
+	}
+
+	SECTION("128 repeat")
+	{
+		std::vector<int8_t> test = {
+			'a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a',
+			'a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a',
+			'a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a',
+			'a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a',
+			'a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a',
+			'a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a',
+			'a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a',
+			'a','a','b',
+		};
+		std::vector<int8_t> expected = {
+			127,'a',-2,'a','b',
+		};
+
+		bool result = RunCompressionTest(test, expected);
+		REQUIRE(result);
+	}
+
+	SECTION("Long repeated run over 127")
+	{
+		std::vector<int8_t> test = {
+			'a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a',
+			'a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a',
+			'a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a',
+			'a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a',
+			'a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a',
+			'a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a',
+			'a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a',
+			'a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a',
+			'a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a',
+			'a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a',
+			'a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a',
+			'a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a',
+			'a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a',
+			'a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a',
+			'a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a',
+			'a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a',
+			'a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a',
+			'a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a',
+			'a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a',
+		};
+		std::vector<int8_t> expected = {
+			127,'a',127,'a',88,'a',
+		};
+
+		bool result = RunCompressionTest(test, expected);
+		REQUIRE(result);
+	}
+
+	SECTION("Negative Run over 127")
+	{
+		std::vector<int8_t> test = {
+			'b','b',
+			'a','b','a','b','a','b','a','b','a','b','a','b','a','b','a','b','a','b',
+			'a','b','a','b','a','b','a','b','a','b','a','b','a','b','a','b','a','b',
+			'a','b','a','b','a','b','a','b','a','b','a','b','a','b','a','b','a','b',
+			'a','b','a','b','a','b','a','b','a','b','a','b','a','b','a','b','a','b',
+			'a','b','a','b','a','b','a','b','a','b','a','b','a','b','a','b','a','b',
+			'a','b','a','b','a','b','a','b','a','b','a','b','a','b','a','b','a','b',
+			'a','b','a','b','a','b','a','b','a','b','a','b','a','b','a','b','a','b',
+			'a','b',
+		};
+		std::vector<int8_t> expected = {
+			2,'b',-127,'a','b','a','b','a','b','a','b','a','b','a','b','a','b','a','b',
+			'a','b','a','b','a','b','a','b','a','b','a','b','a','b','a','b','a','b',
+			'a','b','a','b','a','b','a','b','a','b','a','b','a','b','a','b','a','b',
+			'a','b','a','b','a','b','a','b','a','b','a','b','a','b','a','b','a','b',
+			'a','b','a','b','a','b','a','b','a','b','a','b','a','b','a','b','a','b',
+			'a','b','a','b','a','b','a','b','a','b','a','b','a','b','a','b','a','b',
+			'a','b','a','b','a','b','a','b','a','b','a','b','a','b','a','b','a','b',
+			'a','b','a',1,'b',
+		};
+
+		bool result = RunCompressionTest(test, expected);
+		REQUIRE(result);
+	}
+
+	SECTION("Run over 127 +/- mix, start with repeating characters")
+	{
+		std::vector<int8_t> test = {
+			'c','c','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a',
+			'a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a',
+			'a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a',
+			'a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a',
+			'a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a',
+			'a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a',
+			'a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a',
+			'a','a','a','a','a','b','c',42,
+		};
+		std::vector<int8_t> expected = {
+			2,'c',127,'a',2,'a',-3,'b','c',42
+		};
+
+		bool result = RunCompressionTest(test, expected);
+		REQUIRE(result);
+	}
+
+	SECTION("Run over 127 +/- mix, start with two unique characters")
+	{
+		std::vector<int8_t> test = {
+			'b','c','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a',
+			'a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a',
+			'a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a',
+			'a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a',
+			'a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a',
+			'a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a',
+			'a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a',
+			'a','a','a','a','a','b','c',42,
+		};
+		std::vector<int8_t> expected = {
+			-2,'b','c',127,'a',2,'a',-3,'b','c',42
+		};
+
+		bool result = RunCompressionTest(test, expected);
 		REQUIRE(result);
 	}
 }
