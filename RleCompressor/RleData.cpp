@@ -85,5 +85,38 @@ void RleData::Compress(const std::vector<int8_t>& inputData)
 
 void RleData::Decompress(const std::vector<int8_t>& inputData, size_t outputSize)
 {
+	// Clear mData just in case
+	mData.clear();
 
+	// Reserve the desired output size in mData
+	mData.reserve(outputSize);
+
+	// Loop through input data and check all the number of elements for each data
+	for (size_t i = 0; i < inputData.size(); ++i)
+	{
+		// Get the current count of elements
+		int8_t currentCount = inputData[i];
+
+		// If count is positive, loop through the number of elements and add to mData
+		if (currentCount > 0)
+		{
+			for (size_t j = 0; j < currentCount; ++j)
+			{
+				mData.emplace_back(inputData[i + 1]);
+			}
+			// Increment i to check the next count of elements
+			++i;
+		}
+		else
+		{
+			// Make the number of unique elements positive
+			currentCount *= -1;
+			// Loop through the count and add each unique element to mData
+			for (size_t j = 0; j < currentCount; ++j)
+			{
+				mData.emplace_back(inputData[i + 1]);
+				++i;
+			}
+		}
+	}
 }
