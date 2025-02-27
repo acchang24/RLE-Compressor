@@ -338,20 +338,20 @@ TEST_CASE("File compression", "[file_compression]")
 	RleFile r;
 	SECTION("rle.bmp")
 	{
-		r.CreateArchive("Data/rle.bmp");
-		bool result = CheckFileMD5("Data/rle.bmp.rle", "f2a9d8425d53c664e45d9eb1b53137b9");
+		r.CreateArchive("data/rle.bmp");
+		bool result = CheckFileMD5("data/rle.bmp.rle", "f2a9d8425d53c664e45d9eb1b53137b9");
 		REQUIRE(result);
 	}
 	SECTION("pic.jpg")
 	{
-		r.CreateArchive("Data/pic.jpg");
-		bool result = CheckFileMD5("Data/pic.jpg.rle", "0bbf2a5109b30d79939d2061ea8c74aa");
+		r.CreateArchive("data/pic.jpg");
+		bool result = CheckFileMD5("data/pic.jpg.rle", "0bbf2a5109b30d79939d2061ea8c74aa");
 		REQUIRE(result);
 	}
 	SECTION("Conquest.ogg")
 	{
-		r.CreateArchive("Data/Conquest.ogg");
-		bool result = CheckFileMD5("Data/Conquest.ogg.rle", "ec29ff368ec5100bfba22635ddc5ba5c");
+		r.CreateArchive("data/Conquest.ogg");
+		bool result = CheckFileMD5("data/Conquest.ogg.rle", "ec29ff368ec5100bfba22635ddc5ba5c");
 		REQUIRE(result);
 	}
 }
