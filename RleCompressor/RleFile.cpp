@@ -1,5 +1,4 @@
 #include "RleFile.h"
-#include <iostream>
 #include <fstream>
 
 void RleFile::CreateArchive(const std::string& fileName)
@@ -72,5 +71,66 @@ void RleFile::CreateArchive(const std::string& fileName)
 
 void RleFile::ExtractArchive(const std::string& fileName)
 {
-	std::cout << fileName << "\n";
+	// open the file in binary mode
+	std::ifstream::pos_type size;
+
+	// char array to store data
+	char* memblock = nullptr;
+
+	// Array of the data used to extract
+	std::vector<int8_t> data;
+
+	// open the file for input, in binary mode, and start at the end
+	std::ifstream file(fileName, std::ios::in | std::ios::binary | std::ios::ate);
+	if (file.is_open())
+	{
+		// Save the size of the file
+		size = file.tellg();
+		unsigned int arraySize = static_cast<unsigned int>(size);
+		// Initialize the memblock array with the size
+		memblock = new char[arraySize];
+		// Seek back to the start of the file
+		file.seekg(0, std::ios::beg);
+		// Read the data into memblock
+		file.read(memblock, size);
+		file.close();
+
+		// FileSize starts at index 4
+		mHeader.mFileSize = *(reinterpret_cast<int*>(&memblock[4]));
+		// FileNameLength starts at index 8
+		mHeader.mFileNameLength = *(reinterpret_cast<unsigned char*>(&memblock[8]));
+
+		// Rest of the data starts at index 9
+		int index = 9;
+		for (int i = 0; i < mHeader.mFileNameLength; i++)
+		{
+			mHeader.mFileName += *(&memblock[index]);
+			index++;
+		}
+
+		// Reserve space for vector
+		data.reserve(static_cast<size_t>(arraySize));
+		// Push the data into the vector
+		for (unsigned int i = index; i < arraySize; i++)
+		{
+			data.emplace_back(memblock[i]);
+		}
+
+		mData.Decompress(data, mHeader.mFileSize);
+
+		// Clean up memblock
+		delete[] memblock;
+	}
+
+	std::ofstream arc(mHeader.mFileName, std::ios::out | std::ios::binary | std::ios::trunc);
+
+	if (arc.is_open())
+	{
+		// Write each byte in the mData vector
+		for (int i = 0; i < mData.mData.size(); i++)
+		{
+			arc.write(reinterpret_cast<char*>(&(mData.mData[i])), 1);
+		}
+		arc.close();
+	}
 }
